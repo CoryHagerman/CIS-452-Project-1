@@ -10,7 +10,7 @@ void sort(int[], int);
 
 int main(int argc, char * argv[]){
 
-    int[] array;
+    int[] numbers;
 
     return 0;
 }

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <string.h>
 
 int main(int argc, char * argv[])
 {
@@ -10,8 +11,10 @@ int main(int argc, char * argv[])
  // char* child2[MAX_ARGS];
     pid_t pid;
     int child_status;
-    if (argc == 2){
-	char *const parmList[] ={"./sort", argv[1] };
+    int argc_temp = argc;
+ // printf("argc %d\n", argc_temp);
+    if (argc_temp <= 2){
+	char * const parmList[] ={"./sort", argv[1] };
 	execvp(parmList[0], parmList);
     }
    // printf("this should not be here\n");
@@ -21,24 +24,30 @@ int main(int argc, char * argv[])
     }
     else if (!pid)//child
     {
-        char * parmList[argc/2 + 2];// = {argv[0]};
-	parmList[0] = argv[0];
-	for (int i = 1; i < argc/2 + 1; i ++)
-	    parmList[i] = argv[i];
-	parmList[argc/2 + 1] = NULL;
-	printf("im a child %s %s\n", argv[0], argv[1]);	
-	printf("%d\n",(argc/2 + 1));
+	printf("Child %d is now running\n", getpid());
+	char ** parmList2;
+	parmList2 = (char **)calloc(argc_temp/2 + 2, sizeof(char*));
+        //char * parmList2[argc_temp/2 + 2];// = {argv[0]};
+	strcpy(parmList2[0],argv[0]);
+	for (int i = 1; i < argc_temp/2 + 1; i ++)
+	    strcpy(parmList2[i],argv[i]);
+	    //parmList2[i] = argv[i];
+	parmList2[argc_temp/2 + 1] = NULL;
+	printf("im a child :%s: :%s:\n", argv[0], argv[1]);	
+	printf("%d\n",(argc_temp/2 + 1));
         //exit(0);
-	execvp(parmList[0], parmList);
+        sleep(1);
+	execvp(parmList2[0], parmList2);
     }
     else{ //parent
-        char * parmList[(argc - argc/2)];// = {argv[0]};
-        parmList[0] = argv[0];
-	for (int i = argc/2 + 1; i < argc; i ++)
-            parmList[i - argc/2] = argv[i];
-
-        wait(&child_status);
-    }
+    /*    char * parmList3[(argc_temp - argc_temp/2)];// = {argv[0]};
+        parmList3[0] = argv[0];
+	for (int i = argc_temp/2 + 1; i < argc_temp; i ++)
+            parmList3[i - argc_temp/2] = argv[i];
+sleep(10);*/
+       //while (wait(&child_status) != pid)
+//	    ;
+  sleep(10);  }
     return 0;
 }
 

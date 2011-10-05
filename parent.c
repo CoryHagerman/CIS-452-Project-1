@@ -6,13 +6,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
+#define READ 0 
+#define WRITE 1
 void child (int, int, char * argv[]);
-
+void read_from_pipe(int);
 int main(int argc, char * argv[])
 {
-    pid_t pid, pid2;
-    int status;
     if (argc <= 2){
 	char * const parmList[] ={"./sort", argv[1] };
 	if(execvp(parmList[0], parmList) < 0){
@@ -20,12 +19,29 @@ int main(int argc, char * argv[])
 	    exit(1);
 	}
     }
+    
+    pid_t pid, pid2;
+    int status;
+    int pipe1[2], pipe2[2];
+
+    if (pipe (pipe1) < 0) { 
+        perror ("plumbing problem"); 
+        exit(1); 
+    } 
+    if (pipe (pipe2) < 0) { 
+        perror ("plumbing problem"); 
+        exit(1); 
+    }
+ 
     if((pid = fork()) < 0){
         perror ("fork failed");
         exit(1);
     }
     else if (!pid)//child
     {
+	dup2 (pipe1[WRITE], STDOUT_FILENO);
+	close (pipe1[READ]); 
+        close (pipe1[WRITE]);
 	child(argc/2 + 1, 0, argv);
 	exit(1);
     }
@@ -36,17 +52,39 @@ int main(int argc, char * argv[])
         }
         else if (!pid2)// second child
         {
+	    dup2 (pipe2[WRITE], STDOUT_FILENO);
+	    close (pipe2[READ]); 
+            close (pipe2[WRITE]);
             child(argc - argc/2, argc/2, argv);
             exit(1);
         }
         else{ //parent
             wait(&status);
             wait(&status);
+	    close(pipe1[WRITE]);
+	    close(pipe2[WRITE]);
+
+
+	    read_from_pipe(pipe1[READ]);
+	    read_from_pipe(pipe2[READ]);
+
+
+	    close(pipe1[READ]);
+	    close(pipe2[READ]);		
         }
     }
     return 0;
 }
 
+void read_from_pipe (int file)
+{
+  FILE *stream;
+  int c;
+  stream = fdopen (file, "r");
+  while ((c = fgetc (stream)) != EOF)
+    putchar (c);
+  fclose (stream);
+}
 
 void child (int size, int start, char * argv[])
 {

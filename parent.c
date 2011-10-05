@@ -7,79 +7,66 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-void child (int, char * argv[]);
+void child (int, int, char * argv[]);
 
 int main(int argc, char * argv[])
 {
- // char* child1[MAX_ARGS];
- // char* child2[MAX_ARGS];
-    pid_t pid;
+    pid_t pid, pid2;
     int status;
-    int argc_temp = argc;
- // printf("argc %d\n", argc_temp);
-    if (argc_temp <= 2){
+    if (argc <= 2){
 	char * const parmList[] ={"./sort", argv[1] };
-	execvp(parmList[0], parmList);
+	if(execvp(parmList[0], parmList) < 0){
+	    perror("Exec Failure on Sort");
+	    exit(1);
+	}
     }
-   // printf("this should not be here\n");
     if((pid = fork()) < 0){
         perror ("fork failed");
         exit(1);
     }
     else if (!pid)//child
     {
-	child(argc_temp/2 + 1, argv);
-/*
-	printf("Child %d is now running\n", getpid());
-	char ** parmList2;
-	parmList2 = (char **)calloc(argc_temp/2 + 2, sizeof(char*));
-        //char * parmList2[argc_temp/2 + 2];// = {argv[0]};
-	strcpy(parmList2[0],argv[0]);
-	for (int i = 1; i < argc_temp/2 + 1; i ++){
-	    parmList2[i] = malloc(sizeof(argv[i]));
-	    strcpy(parmList2[i],argv[i]);
-	    //parmList2[i] = argv[i];
-	}
-	parmList2[argc_temp/2 + 1] = NULL;
-	printf("im a child :%s: :%s:\n", argv[0], argv[1]);	
-	printf("%d\n",(argc_temp/2 + 1));
-        //exit(0);
-        sleep(1);
-	execvp(parmList2[0], parmList2);
-*/
+	child(argc/2 + 1, 0, argv);
+	exit(1);
     }
     else{ //parent
-    /*    char * parmList3[(argc_temp - argc_temp/2)];// = {argv[0]};
-        parmList3[0] = argv[0];
-	for (int i = argc_temp/2 + 1; i < argc_temp; i ++)
-            parmList3[i - argc_temp/2] = argv[i];
-sleep(10);*/
-        waitpid(-1, &status, 0);
-
-        //pid = wait(&status);
-        //sleep(10);  
+        if((pid2 = fork()) < 0){
+            perror ("fork failed");
+            exit(1);
+        }
+        else if (!pid2)// second child
+        {
+            child(argc - argc/2, argc/2, argv);
+            exit(1);
+        }
+        else{ //parent
+            wait(&status);
+            wait(&status);
+        }
     }
     return 0;
 }
 
 
-void child (int size, char * argv[])
+void child (int size, int start, char * argv[])
 {
 	printf("Child %d is now running\n", getpid());
 	char ** parmList2;
 	parmList2 = (char **)calloc(size, sizeof(char*));
-        //char * parmList2[argc_temp/2 + 2];// = {argv[0]};
+        //printf("calloced\n");
+	parmList2[0] = (char *)malloc(sizeof(argv[0]));
 	strcpy(parmList2[0],argv[0]);
 	for (int i = 1; i < size; i ++){
-	    parmList2[i] = malloc(sizeof(argv[i]));
-	    strcpy(parmList2[i],argv[i]);
+	    parmList2[i] = (char *)malloc(sizeof(argv[i + start]));
+	    strcpy(parmList2[i],argv[i + start]);
 	    //parmList2[i] = argv[i];
 	}
-	//parmList2[argc_temp/2 + 1] = NULL;
-	printf("im a child :%s: :%s:\n", argv[0], argv[1]);	
-	printf("%d\n",size);
-        //exit(0);
-        sleep(1);
-	printf("im about to exec\n");
-	execvp(parmList2[0], parmList2);
+	parmList2[size] = NULL;
+	//printf("im a child :%s: :%s:\n", parmList2[0], parmList2[1]);	
+	//printf("size:%d:\nstart:%d:\n",size, start);
+	//printf("im about to exec\n");
+	if(execvp(parmList2[0], parmList2) < 0){
+            perror("Exec Failure");
+            exit(1);
+        }
 }

@@ -8,8 +8,11 @@
 #include <sys/wait.h>
 #define READ 0 
 #define WRITE 1
+
+void print (int pipe1, int pipe2);
+
 void child (int, int, char * argv[]);
-void read_from_pipe(int);
+
 int main(int argc, char * argv[])
 {
     if (argc <= 2){
@@ -63,12 +66,9 @@ int main(int argc, char * argv[])
             wait(&status);
 	    close(pipe1[WRITE]);
 	    close(pipe2[WRITE]);
-
-
-	    read_from_pipe(pipe1[READ]);
-	    read_from_pipe(pipe2[READ]);
-
-
+	    
+	    print(pipe1[READ], pipe2[READ]);
+	    
 	    close(pipe1[READ]);
 	    close(pipe2[READ]);		
         }
@@ -76,22 +76,11 @@ int main(int argc, char * argv[])
     return 0;
 }
 
-void read_from_pipe (int file)
-{
-  FILE *stream;
-  int c;
-  stream = fdopen (file, "r");
-  while ((c = fgetc (stream)) != EOF)
-    putchar (c);
-  fclose (stream);
-}
-
 void child (int size, int start, char * argv[])
 {
 	printf("Child %d is now running\n", getpid());
 	char ** parmList2;
 	parmList2 = (char **)calloc(size, sizeof(char*));
-        //printf("calloced\n");
 	parmList2[0] = (char *)malloc(sizeof(argv[0]));
 	strcpy(parmList2[0],argv[0]);
 	for (int i = 1; i < size; i ++){
@@ -107,4 +96,48 @@ void child (int size, int start, char * argv[])
             perror("Exec Failure");
             exit(1);
         }
+}
+
+void print (int pipe1, int pipe2){
+
+    bool c1 = true;
+    bool c2 = true;
+    FILE *stream1;
+    FILE *stream2;
+    stream1 = fdopen (pipe1, "r");
+    stream2 = fdopen (pipe2, "r");
+    int left, right;
+    if ((fscanf (stream1, "%d", &left)) == EOF)
+        c1 = false;
+    
+    if ((fscanf (stream2, "%d", &right)) == EOF)
+        c2 = false;
+    
+    while (c1 || c2){
+	if (c1 && left < right){
+	    printf("%d\n",left);
+    	    if ((fscanf (stream1, "%d", &left)) == EOF)
+        	c1 = false;
+	}
+	else if(c2 && right <= left){
+	    printf("%d\n",right);
+	    if ((fscanf (stream2, "%d", &right)) == EOF)
+                c2 = false;
+	}
+	
+	if (!c1 && c2){
+	    printf("%d\n",right);
+	    while ((fscanf (stream2, "%d", &right)) != EOF)
+	    printf("%d\n",right);
+	    break;
+	}
+	if (!c2 && c1){
+	    printf("%d\n",left);
+	    while ((fscanf (stream1, "%d", &left)) != EOF)
+	    printf("%d\n",left);
+	    break;
+	}
+    }
+    fclose (stream1);
+    fclose (stream2);
 }

@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <time.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -23,6 +21,7 @@ int main(int argc, char * argv[])
     ofstream outstream;
 
     if (pipe(pipe1) < 0){
+
 	perror("bad pipe");
 	exit(0);
     }
@@ -33,7 +32,7 @@ int main(int argc, char * argv[])
     	dup2 (pipe1[WRITE], STDOUT_FILENO);
 	close (pipe1[READ]);
 	close (pipe1[WRITE]);
-
+	//freopen ("myfile.txt","w",stdout);
 	if(execvp("./parent", argv) < 0){
 	    perror("exec failed");
 	    exit(1);
@@ -46,14 +45,15 @@ int main(int argc, char * argv[])
     outstream.open("out.txt");
 
     while (fscanf(instream, "%d", &c) != EOF){
-//	outstream << c << "\n";	
+	outstream << c << "\n";	
 	cout << c << "\n";	
     }
     outstream.close(); 
     close(pipe1[READ]);
+
     fclose (instream);
     }
 
-//    cout << "Sorted all of the files and output to out.txt" << endl;   
+    //cout << "Sorted all of the files and output to out.txt" << endl;   
     return 0;
 }

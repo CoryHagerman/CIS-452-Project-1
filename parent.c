@@ -42,6 +42,8 @@ int main(int argc, char * argv[])
     }
     else if (!pid)//child
     {
+	//printf("Child %d is now running\n", getpid());
+        perror("Child spawned");
 	dup2 (pipe1[WRITE], STDOUT_FILENO);
 	close (pipe1[READ]); 
         close (pipe1[WRITE]);
@@ -55,6 +57,8 @@ int main(int argc, char * argv[])
         }
         else if (!pid2)// second child
         {
+	  //  printf("Child %d is now running\n", getpid());
+            perror("Child spawned");
 	    dup2 (pipe2[WRITE], STDOUT_FILENO);
 	    close (pipe2[READ]); 
             close (pipe2[WRITE]);
@@ -78,7 +82,6 @@ int main(int argc, char * argv[])
 
 void child (int size, int start, char * argv[])
 {
-	printf("Child %d is now running\n", getpid());
 	char ** parmList2;
 	parmList2 = (char **)calloc(size, sizeof(char*));
 	parmList2[0] = (char *)malloc(sizeof(argv[0]));
@@ -89,9 +92,6 @@ void child (int size, int start, char * argv[])
 	    //parmList2[i] = argv[i];
 	}
 	parmList2[size] = NULL;
-	//printf("im a child :%s: :%s:\n", parmList2[0], parmList2[1]);	
-	//printf("size:%d:\nstart:%d:\n",size, start);
-	//printf("im about to exec\n");
 	if(execvp(parmList2[0], parmList2) < 0){
             perror("Exec Failure");
             exit(1);

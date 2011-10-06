@@ -18,8 +18,11 @@ int main(int argc, char * argv[])
     int status;
     int c;
     FILE *instream;
-    ofstream outstream;
+    ofstream outstream, log;
 
+    log.open("log.txt");
+    log << "started execution" << endl;
+    log.close();
     if (pipe(pipe1) < 0){
 
 	perror("bad pipe");
@@ -54,6 +57,9 @@ int main(int argc, char * argv[])
     fclose (instream);
     }
 
+    log.open("log.txt");
+    log << "ended executing" << endl;
+    log.close();
     //cout << "Sorted all of the files and output to out.txt" << endl;   
     return 0;
 }

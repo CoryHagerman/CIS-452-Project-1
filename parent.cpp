@@ -6,8 +6,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <iostream>
+#include <fstream>
 #define READ 0 
 #define WRITE 1
+
+using namespace std;
 
 void print (int pipe1, int pipe2);
 
@@ -26,7 +30,6 @@ int main(int argc, char * argv[])
     pid_t pid, pid2;
     int status;
     int pipe1[2], pipe2[2];
-
     if (pipe (pipe1) < 0) { 
         perror ("plumbing problem"); 
         exit(1); 
@@ -43,7 +46,7 @@ int main(int argc, char * argv[])
     else if (!pid)//child
     {
 	//printf("Child %d is now running\n", getpid());
-        perror("Child spawned");
+        //perror("Child spawned");
 	dup2 (pipe1[WRITE], STDOUT_FILENO);
 	close (pipe1[READ]); 
         close (pipe1[WRITE]);
@@ -58,7 +61,7 @@ int main(int argc, char * argv[])
         else if (!pid2)// second child
         {
 	  //  printf("Child %d is now running\n", getpid());
-            perror("Child spawned");
+            //perror("Child spawned");
 	    dup2 (pipe2[WRITE], STDOUT_FILENO);
 	    close (pipe2[READ]); 
             close (pipe2[WRITE]);
@@ -89,9 +92,12 @@ void child (int size, int start, char * argv[])
 	for (int i = 1; i < size; i ++){
 	    parmList2[i] = (char *)malloc(sizeof(argv[i + start]));
 	    strcpy(parmList2[i],argv[i + start]);
-	    //parmList2[i] = argv[i];
 	}
 	parmList2[size] = NULL;
+        ofstream log;
+        log.open("log.txt", std::ios::app);
+	log << "child created going to exec parent again" << endl;
+	log.close();
 	if(execvp(parmList2[0], parmList2) < 0){
             perror("Exec Failure");
             exit(1);

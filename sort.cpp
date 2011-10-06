@@ -17,6 +17,10 @@ int main(int argc, char * argv[]){
     int *numbers;
     int curr_size = 10;
     int number_words;
+    ofstream log;
+    //log.open("log.txt", std::ios::app);
+    //log << "PID: " << getpid() << " is sorting: " << argv[1]<< endl;
+    //log.close(); 
     numbers = (int*) calloc(curr_size, sizeof(int));
     if (numbers == NULL) {
         fprintf (stderr, "memory allocation failed\n");
@@ -40,8 +44,11 @@ int main(int argc, char * argv[]){
     number_words--; 
     sort(numbers, number_words);
     print(numbers, number_words);
+    
+    log.open("log.txt", std::ios::app);
+    log << "PID: " << getpid() << " is done sorting: " << argv[1]<< endl; 
     free(numbers);
-
+    log.close();
     return 0;
 }
 

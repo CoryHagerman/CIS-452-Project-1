@@ -25,17 +25,17 @@ int main(int argc, char * argv[])
 {
     //if there is only one argument execute the sort program
     if (argc <= 2){
-	char * const parmList[] ={"./sort", argv[1] };
+	char * const parmList[] ={"./sort", argv[1], NULL };
 	if(execvp(parmList[0], parmList) < 0){
 	    perror("Exec Failure on Sort");
 	    exit(1);
 	}
     }
-    
     //pid's for both children
     pid_t pid, pid2;
     int status;
 
+    ofstream log;    
     //pipes for both children
     int pipe1[2], pipe2[2];
     if (pipe (pipe1) < 0) { 
@@ -46,7 +46,11 @@ int main(int argc, char * argv[])
         perror ("plumbing problem"); 
         exit(1); 
     }
-  
+    //print forking
+    log.open("log2.txt", std::ios::app);
+    log << "PID: " << getpid() << " is forking" << endl;
+    log.close();
+ 
     if((pid = fork()) < 0){
         perror ("fork failed");
         exit(1);

@@ -56,9 +56,9 @@ int main(int argc, char * argv[]){
     //append to log file
     log.open("log.txt", std::ios::app);
     log << "PID: " << getpid() << " is done sorting: " << argv[1]<< endl; 
+    log.close();
     //free numbers
     free(numbers);
-    log.close();
     return 0;
 }
 //Bubble Sort
